@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeAcademy Pro - İnteraktif Kod Eğitimi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        dark: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.6s ease-out',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dark .glass-effect {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .code-block {
+            background: #1e1e1e;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .slide-enter {
+            animation: slideEnter 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideEnter {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .slide-exit {
+            animation: slideExit 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideExit {
+            from { opacity: 1; transform: translateX(0); }
+            to { opacity: 0; transform: translateX(-50px); }
+        }
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-dark-950 text-gray-900 dark:text-gray-100 transition-colors duration-300 font-sans">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-effect border-b border-gray-200 dark:border-gray-800 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center cursor-pointer" onclick="showHome()">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-xl mr-3 shadow-lg transform hover:scale-110 transition-transform">
+                        &lt;/&gt;
+                    </div>
+                    <span class="font-bold text-xl tracking-tight">CodeAcademy<span class="text-blue-600 dark:text-blue-400">Pro</span></span>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Progress Indicator -->
+                    <div id="globalProgress" class="hidden md:flex items-center space-x-2 bg-gray-100 dark:bg-dark-800 px-4 py-2 rounded-full">
+                        <div class="w-8 h-8 relative">
+                            <svg class="progress-ring w-8 h-8" viewBox="0 0 36 36">
+                                <path class="text-gray-300 dark:text-gray-600" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"/>
+                                <path id="progressCircle" class="text-blue-600 dark:text-blue-400 transition-all duration-500" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3"/>
+                            </svg>
+                            <span id="progressPercent" class="absolute inset-0 flex items-center justify-center text-xs font-bold">0%</span>
+                        </div>
+                        <span class="text-sm font-medium text-gray-600 dark:text-gray-300">İlerleme</span>
+                    </div>
+
+                    <!-- Dark Mode Toggle -->
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-lg bg-gray-200 dark:bg-dark-800 hover:bg-gray-300 dark:hover:bg-dark-700 transition-colors has-tooltip relative">
+                        <svg id="sunIcon" class="w-5 h-5 hidden dark:block text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                        <svg id="moonIcon" class="w-5 h-5 block dark:hidden text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 24.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        <span class="tooltip absolute top-full mt-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap">Tema Değiştir</span>
+                    </button>
+
+                    <!-- User Profile -->
+                    <div class="w-8 h-8 bg-gradient-to-r from-pink-500 to-orange-400 rounded-full flex items-center justify-center text-white font-bold text-sm cursor-pointer hover:scale-110 transition-transform">
+                        M
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="pt-20 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen">
+        
+        <!-- Home View -->
+        <div id="homeView" class="animate-fade-in">
+            <!-- Hero Section -->
+            <div class="text-center py-16 lg:py-24">
+                <h1 class="text-5xl md:text-7xl font-extrabold mb-6 tracking-tight">
+                    <span class="gradient-text">Kodlamayı</span><br>
+                    <span class="text-gray-900 dark:text-white">Öğrenmenin Yeni Yolu</span>
+                </h1>
+                <p class="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+                    İnteraktif slaytlar, pratik egzersizler ve gerçek projelerle HTML, CSS ve JavaScript'i mastery seviyesinde öğren.
+                </p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="scrollToCourses()" class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all flex items-center gap-2">
+                        <span>Derslere Başla</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Course Cards -->
+            <div id="courses" class="grid md:grid-cols-3 gap-8 mb-16">
+                <!-- HTML Card -->
+                <div class="group relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-400 to-red-500"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <span class="text-3xl font-bold text-orange-600 dark:text-orange-400">&lt;/&gt;</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">HTML Temel Etiketler</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">Web'in iskeletini oluştur. Etiketler, yapı ve semantik HTML'i öğren.</p>
+                        <div class="flex items-center justify-between mb-6">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">12 Slayt • 45 dk</span>
+                            <div class="flex gap-1">
+                                <span class="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></span>
+                                <span class="w-2 h-2 bg-orange-400 rounded-full animate-pulse delay-75"></span>
+                                <span class="w-2 h-2 bg-orange-400 rounded-full animate-pulse delay-150"></span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="startCourse('html', 'slide')" class="flex-1 py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Slayt Modu
+                            </button>
+                            <button onclick="startCourse('html', 'read')" class="flex-1 py-3 px-4 border-2 border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 font-semibold rounded-xl transition-colors">
+                                Okuma Modu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CSS Card -->
+                <div class="group relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-400 to-cyan-500"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <span class="text-3xl font-bold text-blue-600 dark:text-blue-400">#</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">CSS Temel Özellikler</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">Stil ve tasarımın gücünü keşfet. Flexbox, Grid ve animasyonlar.</p>
+                        <div class="flex items-center justify-between mb-6">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">15 Slayt • 60 dk</span>
+                            <div class="flex gap-1">
+                                <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+                                <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-75"></span>
+                                <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse delay-150"></span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="startCourse('css', 'slide')" class="flex-1 py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Slayt Modu
+                            </button>
+                            <button onclick="startCourse('css', 'read')" class="flex-1 py-3 px-4 border-2 border-blue-500 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-semibold rounded-xl transition-colors">
+                                Okuma Modu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JS Card -->
+                <div class="group relative bg-white dark:bg-dark-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100 dark:border-gray-700">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 to-amber-500"></div>
+                    <div class="p-8">
+                        <div class="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <span class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{ }</span>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">JavaScript Temel Kavramlar</h3>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">Etkileşimi kodla. Değişkenler, fonksiyonlar ve DOM manipülasyonu.</p>
+                        <div class="flex items-center justify-between mb-6">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">18 Slayt • 75 dk</span>
+                            <div class="flex gap-1">
+                                <span class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></span>
+                                <span class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse delay-75"></span>
+                                <span class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse delay-150"></span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="startCourse('js', 'slide')" class="flex-1 py-3 px-4 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold rounded-xl transition-colors flex items-center justify-center gap-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Slayt Modu
+                            </button>
+                            <button onclick="startCourse('js', 'read')" class="flex-1 py-3 px-4 border-2 border-yellow-500 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/20 font-semibold rounded-xl transition-colors">
+                                Okuma Modu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="grid md:grid-cols-3 gap-8 text-center">
+                <div class="p-6">
+                    <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Hızlı Öğrenme</h4>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">İnteraktif slaytlarla teoriyi hızla pratiğe dök</p>
+                </div>
+                <div class="p-6">
+                    <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Anında Geri Bildirim</h4>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Quizler ve interaktif kod alanlarıyla test et</p>
+                </div>
+                <div class="p-6">
+                    <div class="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-pink-600 dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Kişiselleştirilmiş</h4>
+                    <p class="text-gray-600 dark:text-gray-400 text-sm">Kendi hızında, kendi tarzında öğren</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide Mode View -->
+        <div id="slideView" class="hidden min-h-[80vh] flex flex-col">
+            <div class="flex-1 flex items-center justify-center relative">
+                <!-- Slide Container -->
+                <div id="slideContainer" class="w-full max-w-5xl bg-white dark:bg-dark-800 rounded-3xl shadow-2xl overflow-hidden min-h-[600px] relative border border-gray-200 dark:border-gray-700">
+                    <!-- Slide Content injected here -->
+                </div>
+
+                <!-- Navigation Arrows -->
+                <button onclick="prevSlide()" class="absolute left-4 top-1/2 transform -translate-y-1/2 w-14 h-14 bg-white dark:bg-dark-800 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform border border-gray-200 dark:border-gray-700 group z-10">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <button onclick="nextSlide()" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-14 h-14 bg-white dark:bg-dark-800 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform border border-gray-200 dark:border-gray-700 group z-10">
+                    <svg class="w-6 h-6 text-gray-600 dark:text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-8 max-w-5xl mx-auto w-full px-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="slideCounter" class="text-sm font-medium text-gray-600 dark:text-gray-400">1 / 10</span>
+                    <button onclick="exitCourse()" class="text-sm text-red-500 hover:text-red-600 font-medium">Dersi Bitir</button>
+                </div>
+                <div class="h-2 bg-gray-200 dark:bg-dark-800 rounded-full overflow-hidden">
+                    <div id="slideProgress" class="h-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reading Mode View -->
+        <div id="readingView" class="hidden max-w-4xl mx-auto">
+            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-xl p-8 md:p-12 border border-gray-200 dark:border-gray-700">
+                <button onclick="exitCourse()" class="mb-6 flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    Geri Dön
+                </button>
+                <div id="readingContent"></div>
+                <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <button onclick="prevReading()" class="px-6 py-3 bg-gray-100 dark:bg-dark-700 rounded-lg hover:bg-gray-200 dark:hover:bg-dark-600 transition-colors font-medium">Önceki</button>
+                    <button onclick="nextReading()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">Sonraki</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span id="toastMessage">Kod kopyalandı!</span>
+    </div>
+
+    <script>
+        // Course Data
+        const courses = {
+            html: {
+                title: 'HTML Temel Etiketler',
+                color: 'orange',
+                slides: [
+                    {
+                        title: 'HTML Nedir?',
+                        content: `
+                            <div class="p-12 text-center">
+                                <div class="text-8xl mb-6 animate-bounce-slow">&lt;/&gt;</div>
+                                <h2 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">HyperText Markup Language</h2>
+                                <p class="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Web sayfalarının iskeletini oluşturan standart işaretleme dilidir.</p>
+                                <div class="mt-8 flex justify-center gap-4">
+                                    <div class="px-4 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-lg">Yapı</div>
+                                    <div class="px-4 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-lg">İçerik</div>
+                                    <div class="px-4 py-2 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-lg">Anlam</div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Temel Yapı',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Her HTML Belgesinin İskeleti</h3>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm overflow-x-auto relative group">
+                                    <button onclick="copyCode(this)" class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs">Kopyala</button>
+                                    <pre class="text-gray-300"><span class="text-pink-400">&lt;!DOCTYPE</span> <span class="text-blue-400">html</span><span class="text-pink-400">&gt;</span>
+<span class="text-pink-400">&lt;html</span> <span class="text-green-400">lang</span>=<span class="text-yellow-300">"tr"</span><span class="text-pink-400">&gt;</span>
+  <span class="text-pink-400">&lt;head&gt;</span>
+    <span class="text-pink-400">&lt;meta</span> <span class="text-green-400">charset</span>=<span class="text-yellow-300">"UTF-8"</span><span class="text-pink-400">&gt;</span>
+    <span class="text-pink-400">&lt;title&gt;</span><span class="text-white">Sayfa Başlığı</span><span class="text-pink-400">&lt;/title&gt;</span>
+  <span class="text-pink-400">&lt;/head&gt;</span>
+  <span class="text-pink-400">&lt;body&gt;</span>
+    <span class="text-gray-500">&lt;!-- İçerik buraya --&gt;</span>
+  <span class="text-pink-400">&lt;/body&gt;</span>
+<span class="text-pink-400">&lt;/html&gt;</span></pre>
+                                </div>
+                                <div class="mt-6 grid grid-cols-3 gap-4">
+                                    <div class="p-4 bg-gray-50 dark:bg-dark-900 rounded-lg">
+                                        <div class="font-bold text-pink-400 mb-1">&lt;head&gt;</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Meta veriler ve bağlantılar</div>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-dark-900 rounded-lg">
+                                        <div class="font-bold text-blue-400 mb-1">&lt;body&gt;</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Görünür içerik</div>
+                                    </div>
+                                    <div class="p-4 bg-gray-50 dark:bg-dark-900 rounded-lg">
+                                        <div class="font-bold text-green-400 mb-1">&lt;!DOCTYPE&gt;</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Belge tipi bildirimi</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Başlık Etiketleri',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">h1&apos;den h6&apos;ya Kadar</h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center gap-4 p-4 bg-white dark:bg-dark-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <span class="text-orange-500 font-mono">&lt;h1&gt;</span>
+                                        <h1 class="text-3xl font-bold">En Önemli Başlık</h1>
+                                        <span class="text-orange-500 font-mono">&lt;/h1&gt;</span>
+                                    </div>
+                                    <div class="flex items-center gap-4 p-4 bg-white dark:bg-dark-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <span class="text-orange-500 font-mono">&lt;h2&gt;</span>
+                                        <h2 class="text-2xl font-bold">Alt Başlık</h2>
+                                        <span class="text-orange-500 font-mono">&lt;/h2&gt;</span>
+                                    </div>
+                                    <div class="flex items-center gap-4 p-4 bg-white dark:bg-dark-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                                        <span class="text-orange-500 font-mono">&lt;h3&gt;</span>
+                                        <h3 class="text-xl font-bold">Daha Küçük Başlık</h3>
+                                        <span class="text-orange-500 font-mono">&lt;/h3&gt;</span>
+                                    </div>
+                                    <div class="text-center text-gray-500 mt-4">... h4, h5, h6 ile devam eder</div>
+                                </div>
+                                <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 rounded">
+                                    <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                                        <strong>SEO İpucu:</strong> Her sayfada sadece bir adet &lt;h1&gt; kullanın!
+                                    </p>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Paragraf ve Metin',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Metin Formatlama</h3>
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <div class="space-y-3">
+                                        <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded font-mono text-sm">&lt;p&gt;Paragraf&lt;/p&gt;</div>
+                                        <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded font-mono text-sm">&lt;strong&gt;Kalın&lt;/strong&gt;</div>
+                                        <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded font-mono text-sm">&lt;em&gt;İtalik&lt;/em&gt;</div>
+                                        <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded font-mono text-sm">&lt;mark&gt;Vurgulu&lt;/mark&gt;</div>
+                                        <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded font-mono text-sm">&lt;code&gt;Kod&lt;/code&gt;</div>
+                                    </div>
+                                    <div class="space-y-3">
+                                        <div class="p-3 bg-white dark:bg-dark-800 rounded border">Normal paragraf metni</div>
+                                        <div class="p-3 bg-white dark:bg-dark-800 rounded border font-bold">Kalın metin</div>
+                                        <div class="p-3 bg-white dark:bg-dark-800 rounded border italic">İtalik metin</div>
+                                        <div class="p-3 bg-white dark:bg-dark-800 rounded border"><mark class="bg-yellow-200 dark:bg-yellow-600 px-1">Vurgulu metin</mark></div>
+                                        <div class="p-3 bg-white dark:bg-dark-800 rounded border font-mono bg-gray-100 dark:bg-dark-900 text-sm">Kod metni</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Liste Etiketleri',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Sıralı ve Sırasız Listeler</h3>
+                                <div class="grid md:grid-cols-2 gap-8">
+                                    <div class="bg-gray-50 dark:bg-dark-900 p-6 rounded-xl">
+                                        <h4 class="font-bold mb-4 text-orange-600">&lt;ul&gt; - Sırasız Liste</h4>
+                                        <ul class="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 ml-4">
+                                            <li>Elma</li>
+                                            <li>Armut</li>
+                                            <li>Muz</li>
+                                        </ul>
+                                    </div>
+                                    <div class="bg-gray-50 dark:bg-dark-900 p-6 rounded-xl">
+                                        <h4 class="font-bold mb-4 text-orange-600">&lt;ol&gt; - Sıralı Liste</h4>
+                                        <ol class="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300 ml-4">
+                                            <li>Birinci adım</li>
+                                            <li>İkinci adım</li>
+                                            <li>Üçüncü adım</li>
+                                        </ol>
+                                    </div>
+                                </div>
+                                <div class="mt-6 text-center">
+                                    <div class="inline-block bg-gray-900 text-gray-300 p-4 rounded-lg font-mono text-sm">
+                                        &lt;li&gt; liste elemanı &lt;/li&gt;
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Link ve Navigasyon',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">&lt;a&gt; Etiketi - Bağlantılar</h3>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm mb-6">
+                                    <span class="text-pink-400">&lt;a</span> <span class="text-green-400">href</span>=<span class="text-yellow-300">"https://example.com"</span> <span class="text-green-400">target</span>=<span class="text-yellow-300">"_blank"</span><span class="text-pink-400">&gt;</span>
+                                    <span class="text-white">Tıklayın</span>
+                                    <span class="text-pink-400">&lt;/a&gt;</span>
+                                </div>
+                                <div class="grid md:grid-cols-3 gap-4">
+                                    <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                                        <div class="font-bold mb-2">href</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Bağlantı adresi</div>
+                                    </div>
+                                    <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                                        <div class="font-bold mb-2">target="_blank"</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Yeni sekmede aç</div>
+                                    </div>
+                                    <div class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+                                        <div class="font-bold mb-2">title</div>
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">Açıklama tooltip</div>
+                                    </div>
+                                </div>
+                                <div class="mt-6 text-center">
+                                    <a href="#" class="inline-block px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">Örnek Link</a>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Görseller',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">&lt;img&gt; Etiketi</h3>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm mb-6">
+                                    <span class="text-pink-400">&lt;img</span> <span class="text-green-400">src</span>=<span class="text-yellow-300">"resim.jpg"</span> 
+                                    <span class="text-green-400">alt</span>=<span class="text-yellow-300">"Açıklama"</span>
+                                    <span class="text-green-400">width</span>=<span class="text-yellow-300">"500"</span>
+                                    <span class="text-green-400">height</span>=<span class="text-yellow-300">"300"</span><span class="text-pink-400">&gt;</span>
+                                </div>
+                                <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded">
+                                    <p class="text-sm"><strong>Önemli:</strong> Her zaman <code>alt</code> attribute&apos;ünü kullanın! Erişilebilirlik ve SEO için kritik.</p>
+                                </div>
+                                <div class="mt-6 flex justify-center">
+                                    <div class="bg-gray-200 dark:bg-dark-900 border-2 border-dashed border-gray-400 rounded-xl w-64 h-40 flex items-center justify-center">
+                                        <span class="text-gray-500">🖼️ Resim Alanı</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Form Etiketleri',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Kullanıcı Girdisi</h3>
+                                <div class="space-y-4 max-w-md mx-auto">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Metin Girişi</label>
+                                        <input type="text" placeholder="İsminizi yazın" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-900">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Email</label>
+                                        <input type="email" placeholder="ornek@mail.com" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-900">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Şifre</label>
+                                        <input type="password" placeholder="••••••" class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-900">
+                                    </div>
+                                    <button class="w-full py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">Gönder</button>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Quiz Zamanı!',
+                        content: `
+                            <div class="p-8 text-center">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Bilgini Test Et</h3>
+                                <div id="quizContainer" class="max-w-2xl mx-auto text-left">
+                                    <p class="mb-4 font-medium">Hangisi en önemli başlık etiketidir?</p>
+                                    <div class="space-y-3">
+                                        <button onclick="checkAnswer(this, false)" class="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-orange-500 transition-colors">
+                                            &lt;h6&gt;
+                                        </button>
+                                        <button onclick="checkAnswer(this, true)" class="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-orange-500 transition-colors">
+                                            &lt;h1&gt;
+                                        </button>
+                                        <button onclick="checkAnswer(this, false)" class="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-orange-500 transition-colors">
+                                            &lt;head&gt;
+                                        </button>
+                                    </div>
+                                    <div id="quizResult" class="mt-4 hidden"></div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Tebrikler!',
+                        content: `
+                            <div class="p-12 text-center">
+                                <div class="text-8xl mb-6 animate-bounce">🎉</div>
+                                <h2 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">HTML Temellerini Tamamladın!</h2>
+                                <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">Şimdi CSS ile tasarımı öğrenme zamanı.</p>
+                                <div class="flex justify-center gap-4">
+                                    <button onclick="exitCourse()" class="px-8 py-3 bg-gray-200 dark:bg-dark-700 text-gray-800 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-dark-600 transition-colors">
+                                        Ana Sayfa
+                                    </button>
+                                    <button onclick="startCourse('css', 'slide')" class="px-8 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors">
+                                        CSS&apos;e Başla →
+                                    </button>
+                                </div>
+                            </div>
+                        `
+                    }
+                ],
+                reading: `
+                    <h1 class="text-4xl font-bold mb-8 text-gray-900 dark:text-white">HTML Temel Etiketler - Detaylı Anlatım</h1>
+                    
+                    <div class="prose dark:prose-invert max-w-none">
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Giriş</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                            HTML (HyperText Markup Language), web sayfalarının yapısını tanımlayan standart işaretleme dilidir. 
+                            Tim Berners-Lee tarafından 1991&apos;de geliştirilmiş ve web&apos;in temelini oluşturmuştur.
+                        </p>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Temel Yapı</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            Her HTML belgesi belirli bir yapıya sahiptir. Bu yapı tarayıcıya sayfanın nasıl işleneceğini söyler.
+                        </p>
+                        
+                        <div class="bg-gray-900 rounded-xl p-6 my-6 relative group">
+                            <button onclick="copyCode(this)" class="absolute top-4 right-4 bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm transition-colors">Kopyala</button>
+                            <pre class="text-gray-300 font-mono text-sm overflow-x-auto"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="tr"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Sayfa Başlığı&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Merhaba Dünya&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                        </div>
+
+                        <h3 class="text-xl font-bold mt-6 mb-3">Etiket Açıklamaları:</h3>
+                        <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 mb-6">
+                            <li><code>&lt;!DOCTYPE html&gt;</code> - HTML5 belgesi olduğunu bildirir</li>
+                            <li><code>&lt;html&gt;</code> - Kök element, tüm içeriği kapsar</li>
+                            <li><code>&lt;head&gt;</code> - Meta veriler, stil ve script bağlantıları</li>
+                            <li><code>&lt;body&gt;</code> - Görünür tüm içerik</li>
+                        </ul>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Başlık Etiketleri (h1-h6)</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            Başlıklar hiyerarşik yapıda olmalıdır. h1 en önemli, h6 en az önemli başlıktır.
+                        </p>
+                        
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded my-4">
+                            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                                <strong>SEO İpucu:</strong> Her sayfada yalnızca bir tane h1 kullanın. Arama motorları için kritik öneme sahiptir.
+                            </p>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Metin Formatlama</h2>
+                        <div class="grid md:grid-cols-2 gap-4 my-4">
+                            <div class="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg">
+                                <code class="text-pink-500">&lt;strong&gt;</code> - Kalın metin (önemli)
+                            </div>
+                            <div class="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg">
+                                <code class="text-pink-500">&lt;em&gt;</code> - İtalik (vurgu)
+                            </div>
+                            <div class="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg">
+                                <code class="text-pink-500">&lt;mark&gt;</code> - Fosforlu kalem efekti
+                            </div>
+                            <div class="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg">
+                                <code class="text-pink-500">&lt;code&gt;</code> - Kod parçacığı
+                            </div>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Listeler</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            HTML&apos;de üç tip liste vardır: Sırasız (ul), Sıralı (ol) ve Tanım listeleri (dl).
+                        </p>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Linkler ve Görseller</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            Web&apos;in temelini oluşturan bağlantılar ve medya elementleri.
+                        </p>
+                        
+                        <div class="bg-gray-900 rounded-xl p-6 my-6">
+                            <pre class="text-gray-300 font-mono text-sm"><code>&lt;!-- Bağlantı --&gt;
+&lt;a href="https://ornek.com" target="_blank" rel="noopener"&gt;Tıkla&lt;/a&gt;
+
+&lt;!-- Görsel --&gt;
+&lt;img src="resim.jpg" alt="Açıklayıcı metin" loading="lazy"&gt;</code></pre>
+                        </div>
+
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 rounded my-4">
+                            <p class="text-sm text-blue-800 dark:text-blue-200">
+                                <strong>Bilgi:</strong> Görsellerde <code>alt</code> attribute&apos;ü her zaman doldurulmalıdır. 
+                                Bu, görme engelli kullanıcılar için ekran okuyucular tarafından kullanılır ve SEO&apos;ya katkı sağlar.
+                            </p>
+                        </div>
+                    </div>
+                `
+            },
+            css: {
+                title: 'CSS Temel Özellikler',
+                color: 'blue',
+                slides: [
+                    {
+                        title: 'CSS Nedir?',
+                        content: `
+                            <div class="p-12 text-center">
+                                <div class="text-8xl mb-6 animate-spin-slow">🎨</div>
+                                <h2 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">Cascading Style Sheets</h2>
+                                <p class="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Web sayfalarının görünümünü ve düzenini kontrol eden stil dilidir.</p>
+                                <div class="mt-8 flex justify-center gap-4">
+                                    <div class="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg">Renk</div>
+                                    <div class="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg">Yazı Tipi</div>
+                                    <div class="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg">Düzen</div>
+                                    <div class="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg">Animasyon</div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'CSS Nasıl Eklenir?',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">3 Yöntem</h3>
+                                <div class="space-y-6">
+                                    <div class="bg-gray-50 dark:bg-dark-900 p-6 rounded-xl border-l-4 border-blue-500">
+                                        <h4 class="font-bold text-lg mb-2">1. Inline CSS</h4>
+                                        <code class="text-sm bg-gray-800 text-gray-300 px-2 py-1 rounded">&lt;p style="color: red;"&gt;</code>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Doğrudan etiket içinde • Önerilmez</p>
+                                    </div>
+                                    <div class="bg-gray-50 dark:bg-dark-900 p-6 rounded-xl border-l-4 border-blue-500">
+                                        <h4 class="font-bold text-lg mb-2">2. Internal CSS</h4>
+                                        <code class="text-sm bg-gray-800 text-gray-300 px-2 py-1 rounded">&lt;style&gt; ... &lt;/style&gt;</code>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">HTML head bölümünde • Tek sayfa için</p>
+                                    </div>
+                                    <div class="bg-gray-50 dark:bg-dark-900 p-6 rounded-xl border-l-4 border-green-500">
+                                        <h4 class="font-bold text-lg mb-2">3. External CSS ✅</h4>
+                                        <code class="text-sm bg-gray-800 text-gray-300 px-2 py-1 rounded">&lt;link rel="stylesheet" href="style.css"&gt;</code>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mt-2">Ayrı dosya • En iyi pratik</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Seçiciler (Selectors)',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Elementleri Hedefleme</h3>
+                                <div class="grid md:grid-cols-2 gap-6">
+                                    <div class="space-y-4">
+                                        <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                            <div class="text-blue-400">p { }</div>
+                                            <div class="text-gray-500 text-xs mt-1">Tüm paragraflar</div>
+                                        </div>
+                                        <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                            <div class="text-blue-400">.class { }</div>
+                                            <div class="text-gray-500 text-xs mt-1">Class&apos;ı "class" olanlar</div>
+                                        </div>
+                                        <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                            <div class="text-blue-400">#id { }</div>
+                                            <div class="text-gray-500 text-xs mt-1">ID&apos;si "id" olan tek element</div>
+                                        </div>
+                                        <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                            <div class="text-blue-400">* { }</div>
+                                            <div class="text-gray-500 text-xs mt-1">Tüm elementler</div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-50 dark:bg-dark-900 p-6 rounded-xl">
+                                        <h4 class="font-bold mb-4">Öncelik (Specificity)</h4>
+                                        <div class="space-y-3">
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-bold">1</span>
+                                                <span>Inline (style="")</span>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+                                                <span>ID (#header)</span>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-8 h-8 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-sm font-bold">3</span>
+                                                <span>Class (.btn)</span>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <span class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold">4</span>
+                                                <span>Element (p)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Renkler ve Arka Plan',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Color & Background</h3>
+                                <div class="grid md:grid-cols-3 gap-4 mb-6">
+                                    <div class="h-24 rounded-lg bg-red-500 flex items-center justify-center text-white font-bold shadow-lg">red</div>
+                                    <div class="h-24 rounded-lg bg-blue-500 flex items-center justify-center text-white font-bold shadow-lg">#3b82f6</div>
+                                    <div class="h-24 rounded-lg bg-green-500 flex items-center justify-center text-white font-bold shadow-lg">rgb(34, 197, 94)</div>
+                                </div>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm">
+                                    <div class="text-gray-400 mb-2">/* İsim */</div>
+                                    <div class="text-blue-400">color: <span class="text-yellow-300">red</span>;</div>
+                                    <div class="text-gray-400 mt-3 mb-2">/* HEX */</div>
+                                    <div class="text-blue-400">background: <span class="text-yellow-300">#3b82f6</span>;</div>
+                                    <div class="text-gray-400 mt-3 mb-2">/* RGB / RGBA */</div>
+                                    <div class="text-blue-400">color: <span class="text-yellow-300">rgba(59, 130, 246, 0.5)</span>;</div>
+                                    <div class="text-gray-400 mt-3 mb-2">/* HSL */</div>
+                                    <div class="text-blue-400">background: <span class="text-yellow-300">hsl(217, 91%, 60%)</span>;</div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Box Model',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Kutu Modeli</h3>
+                                <div class="flex justify-center mb-6">
+                                    <div class="relative p-8 bg-yellow-200 dark:bg-yellow-900/40 border-4 border-dashed border-yellow-400">
+                                        <span class="absolute top-2 left-2 text-xs font-bold text-yellow-800">Margin</span>
+                                        <div class="p-6 bg-orange-200 dark:bg-orange-900/40 border-4 border-orange-400 relative">
+                                            <span class="absolute top-2 left-2 text-xs font-bold text-orange-800">Border</span>
+                                            <div class="p-4 bg-green-200 dark:bg-green-900/40 relative">
+                                                <span class="absolute top-1 left-1 text-xs font-bold text-green-800">Padding</span>
+                                                <div class="w-32 h-20 bg-blue-400 flex items-center justify-center text-white font-bold rounded">Content</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm text-center">
+                                    <span class="text-blue-400">box-sizing</span>: <span class="text-yellow-300">border-box</span>; <span class="text-gray-500">/* Her zaman kullan! */</span>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Flexbox',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Modern Düzen: Flexbox</h3>
+                                <div class="bg-gray-100 dark:bg-dark-900 p-4 rounded-xl mb-6">
+                                    <div class="flex gap-4 justify-center items-center h-32">
+                                        <div class="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">1</div>
+                                        <div class="w-16 h-20 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">2</div>
+                                        <div class="w-16 h-12 bg-pink-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">3</div>
+                                    </div>
+                                </div>
+                                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                                    <div class="bg-gray-900 p-4 rounded-lg font-mono">
+                                        <div class="text-purple-400">display: flex;</div>
+                                        <div class="text-blue-400">justify-content: center;</div>
+                                        <div class="text-green-400">align-items: center;</div>
+                                        <div class="text-yellow-400">gap: 1rem;</div>
+                                    </div>
+                                    <div class="space-y-2 text-gray-600 dark:text-gray-400">
+                                        <div><strong>justify-content:</strong> Yatay hizalama</div>
+                                        <div><strong>align-items:</strong> Dikey hizalama</div>
+                                        <div><strong>gap:</strong> Elementler arası boşluk</div>
+                                        <div><strong>flex-direction:</strong> Yön (row/column)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Grid Sistemi',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">CSS Grid</h3>
+                                <div class="bg-gray-100 dark:bg-dark-900 p-4 rounded-xl mb-6">
+                                    <div class="grid grid-cols-3 gap-2">
+                                        <div class="h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-lg"></div>
+                                        <div class="h-20 bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg"></div>
+                                        <div class="h-20 bg-gradient-to-br from-pink-400 to-pink-600 rounded-lg"></div>
+                                        <div class="h-20 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg col-span-2"></div>
+                                        <div class="h-20 bg-gradient-to-br from-teal-400 to-teal-600 rounded-lg"></div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm">
+                                    <div class="text-purple-400">display: grid;</div>
+                                    <div class="text-blue-400">grid-template-columns: <span class="text-yellow-300">repeat(3, 1fr)</span>;</div>
+                                    <div class="text-green-400">gap: <span class="text-yellow-300">1rem</span>;</div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Animasyonlar',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Transition & Animation</h3>
+                                <div class="flex justify-center gap-8 mb-8">
+                                    <button class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 hover:scale-110 transition-all duration-300 shadow-lg">
+                                        Hover Et!
+                                    </button>
+                                    <div class="w-16 h-16 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg animate-spin"></div>
+                                </div>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm">
+                                    <div class="text-gray-400 mb-2">/* Transition */</div>
+                                    <div class="text-blue-400">transition: <span class="text-yellow-300">all 0.3s ease</span>;</div>
+                                    <div class="text-gray-400 mt-4 mb-2">/* Animation */</div>
+                                    <div class="text-blue-400">@keyframes <span class="text-yellow-300">spin</span> {</div>
+                                    <div class="text-purple-400 ml-4">from { <span class="text-blue-400">transform</span>: <span class="text-yellow-300">rotate(0deg)</span>; }</div>
+                                    <div class="text-purple-400 ml-4">to { <span class="text-blue-400">transform</span>: <span class="text-yellow-300">rotate(360deg)</span>; }</div>
+                                    <div class="text-blue-400">}</div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Responsive Design',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Mobil Uyumlu Tasarım</h3>
+                                <div class="flex justify-center mb-6">
+                                    <div class="flex gap-4">
+                                        <div class="w-16 h-24 border-4 border-gray-400 rounded-lg flex items-center justify-center">
+                                            <span class="text-xs">📱</span>
+                                        </div>
+                                        <div class="w-20 h-24 border-4 border-gray-400 rounded-lg flex items-center justify-center">
+                                            <span class="text-xs">📱</span>
+                                        </div>
+                                        <div class="w-32 h-24 border-4 border-gray-400 rounded-lg flex items-center justify-center">
+                                            <span class="text-xs">💻</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm">
+                                    <div class="text-gray-400 mb-2">/* Mobile First */</div>
+                                    <div class="text-blue-400">.container {</div>
+                                    <div class="text-purple-400 ml-4">width: <span class="text-yellow-300">100%</span>;</div>
+                                    <div class="text-blue-400">}</div>
+                                    <div class="text-gray-400 mt-3 mb-2">/* Tablet ve üstü */</div>
+                                    <div class="text-pink-400">@media (min-width: 768px) {</div>
+                                    <div class="text-blue-400 ml-4">.container {</div>
+                                    <div class="text-purple-400 ml-8">width: <span class="text-yellow-300">750px</span>;</div>
+                                    <div class="text-blue-400 ml-4">}</div>
+                                    <div class="text-pink-400">}</div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Quiz Zamanı!',
+                        content: `
+                            <div class="p-8 text-center">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">CSS Bilgini Test Et</h3>
+                                <div id="quizContainer" class="max-w-2xl mx-auto text-left">
+                                    <p class="mb-4 font-medium">Hangi özellik elementleri yatay hizalar?</p>
+                                    <div class="space-y-3">
+                                        <button onclick="checkAnswer(this, false)" class="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 transition-colors">
+                                            align-items
+                                        </button>
+                                        <button onclick="checkAnswer(this, true)" class="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 transition-colors">
+                                            justify-content
+                                        </button>
+                                        <button onclick="checkAnswer(this, false)" class="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-500 transition-colors">
+                                            flex-direction
+                                        </button>
+                                    </div>
+                                    <div id="quizResult" class="mt-4 hidden"></div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Harika İş!',
+                        content: `
+                            <div class="p-12 text-center">
+                                <div class="text-8xl mb-6 animate-bounce">🎨</div>
+                                <h2 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">CSS Temellerini Tamamladın!</h2>
+                                <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">Şimdi JavaScript ile etkileşimi öğren.</p>
+                                <div class="flex justify-center gap-4">
+                                    <button onclick="exitCourse()" class="px-8 py-3 bg-gray-200 dark:bg-dark-700 text-gray-800 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-dark-600 transition-colors">
+                                        Ana Sayfa
+                                    </button>
+                                    <button onclick="startCourse('js', 'slide')" class="px-8 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
+                                        JS&apos;e Başla →
+                                    </button>
+                                </div>
+                            </div>
+                        `
+                    }
+                ],
+                reading: `
+                    <h1 class="text-4xl font-bold mb-8 text-gray-900 dark:text-white">CSS Temel Özellikler - Detaylı Anlatım</h1>
+                    
+                    <div class="prose dark:prose-invert max-w-none">
+                        <h2 class="text-2xl font-bold mt-8 mb-4">CSS&apos;e Giriş</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                            CSS (Cascading Style Sheets), HTML elementlerinin nasıl görüntüleneceğini tanımlayan bir stil dilidir. 
+                            1996&apos;da Håkon Wium Lie tarafından geliştirilmiştir.
+                        </p>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">CSS Syntax (Sözdizimi)</h2>
+                        <div class="bg-gray-900 rounded-xl p-6 my-6">
+                            <pre class="text-gray-300 font-mono text-sm"><code>seçici {
+    özellik: değer;
+    özellik2: değer2;
+}</code></pre>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Seçiciler (Selectors)</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            CSS&apos;de elementleri hedeflemek için çeşitli seçiciler kullanırız:
+                        </p>
+                        
+                        <div class="bg-gray-50 dark:bg-dark-900 rounded-xl p-6 my-6 space-y-4">
+                            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+                                <code class="text-blue-600 dark:text-blue-400 font-mono">*</code>
+                                <span class="text-gray-600 dark:text-gray-400">Tüm elementler</span>
+                            </div>
+                            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+                                <code class="text-blue-600 dark:text-blue-400 font-mono">element</code>
+                                <span class="text-gray-600 dark:text-gray-400">Belirli etiket (p, div, h1)</span>
+                            </div>
+                            <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-2">
+                                <code class="text-blue-600 dark:text-blue-400 font-mono">.class</code>
+                                <span class="text-gray-600 dark:text-gray-400">Class attribute&apos;üne sahip elementler</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <code class="text-blue-600 dark:text-blue-400 font-mono">#id</code>
+                                <span class="text-gray-600 dark:text-gray-400">ID&apos;ye sahip tek element</span>
+                            </div>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Box Model</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            Her HTML elementi bir kutu olarak düşünülebilir. Box Model bu kutunun yapısını tanımlar:
+                        </p>
+                        
+                        <ul class="list-disc list-inside space-y-2 text-gray-600 dark:text-gray-400 mb-6">
+                            <li><strong>Content:</strong> İçerik alanı (metin, görsel)</li>
+                            <li><strong>Padding:</strong> İçerik ile border arası boşluk</li>
+                            <li><strong>Border:</strong> Çerçeve</li>
+                            <li><strong>Margin:</strong> Dış boşluk (diğer elementlerden uzaklık)</li>
+                        </ul>
+
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded my-4">
+                            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                                <strong>Önemli:</strong> <code>box-sizing: border-box;</code> kullanarak padding ve border&apos;ın genişliğe dahil olmasını sağlayın. 
+                                Bu modern web geliştirmede standart bir uygulamadır.
+                            </p>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Flexbox</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            Tek boyutlu düzenler (satır veya sütun) için tasarlanmış modern bir layout sistemidir.
+                        </p>
+
+                        <h3 class="text-xl font-bold mt-6 mb-3">Temel Flexbox Özellikleri:</h3>
+                        <div class="bg-gray-900 rounded-xl p-6 my-6">
+                            <pre class="text-gray-300 font-mono text-sm"><code>.container {
+    display: flex;
+    justify-content: center; /* Yatay hizalama */
+    align-items: center;     /* Dikey hizalama */
+    flex-direction: row;     /* Yön: row | column */
+    flex-wrap: wrap;         /* Taşma durumu */
+    gap: 1rem;              /* Elementler arası boşluk */
+}</code></pre>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">CSS Grid</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            İki boyutlu düzenler (hem satır hem sütun) için güçlü bir layout sistemidir.
+                        </p>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Responsive Tasarım</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            Media queries kullanarak farklı ekran boyutlarına göre stil değişiklikleri yapılır.
+                        </p>
+
+                        <div class="bg-gray-900 rounded-xl p-6 my-6">
+                            <pre class="text-gray-300 font-mono text-sm"><code>/* Mobil öncelikli yaklaşım */
+.element {
+    width: 100%;
+}
+
+/* Tablet */
+@media (min-width: 768px) {
+    .element {
+        width: 50%;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .element {
+        width: 33.33%;
+    }
+}</code></pre>
+                        </div>
+                    </div>
+                `
+            },
+            js: {
+                title: 'JavaScript Temel Kavramlar',
+                color: 'yellow',
+                slides: [
+                    {
+                        title: 'JavaScript Nedir?',
+                        content: `
+                            <div class="p-12 text-center">
+                                <div class="text-8xl mb-6 animate-pulse">⚡</div>
+                                <h2 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">Web&apos;in Dili</h2>
+                                <p class="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Etkileşimli web sayfaları oluşturmak için kullanılan programlama dilidir.</p>
+                                <div class="mt-8 flex justify-center gap-4">
+                                    <div class="px-4 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg">Etkileşim</div>
+                                    <div class="px-4 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg">Dinamik</div>
+                                    <div class="px-4 py-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 rounded-lg">Versatile</div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Değişkenler',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Veri Saklama</h3>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm mb-6">
+                                    <div class="text-gray-400 mb-2">// Modern JS (ES6+)</div>
+                                    <div class="text-pink-400">const</div> <span class="text-blue-400">isim</span> = <span class="text-yellow-300">&quot;Meriç&quot;</span>; <span class="text-gray-500">// Sabit</span>
+                                    <div class="mt-2 text-pink-400">let</div> <span class="text-blue-400">yas</span> = <span class="text-green-400">25</span>; <span class="text-gray-500">// Değişebilir</span>
+                                    <div class="mt-2 text-pink-400">var</div> <span class="text-blue-400">eski</span> = <span class="text-yellow-300">&quot;kullanma&quot;</span>; <span class="text-gray-500">// Eski yöntem</span>
+                                </div>
+                                <div class="grid md:grid-cols-3 gap-4">
+                                    <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-2 border-yellow-400">
+                                        <div class="font-bold text-yellow-700 dark:text-yellow-300 mb-2">const</div>
+                                        <div class="text-sm">Değiştirilemez atama</div>
+                                    </div>
+                                    <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border-2 border-yellow-400">
+                                        <div class="font-bold text-yellow-700 dark:text-yellow-300 mb-2">let</div>
+                                        <div class="text-sm">Değiştirilebilir</div>
+                                    </div>
+                                    <div class="p-4 bg-gray-100 dark:bg-dark-900 rounded-lg opacity-50">
+                                        <div class="font-bold mb-2">var</div>
+                                        <div class="text-sm">Fonksiyon scope&apos;lu</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Veri Tipleri',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Primitive Types</h3>
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                        <div class="text-blue-400">String: <span class="text-yellow-300">&quot;Merhaba&quot;</span></div>
+                                        <div class="text-gray-500 text-xs mt-1">Metin verileri</div>
+                                    </div>
+                                    <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                        <div class="text-blue-400">Number: <span class="text-green-400">42</span>, <span class="text-green-400">3.14</span></div>
+                                        <div class="text-gray-500 text-xs mt-1">Tam ve ondalık sayılar</div>
+                                    </div>
+                                    <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                        <div class="text-blue-400">Boolean: <span class="text-purple-400">true</span> / <span class="text-purple-400">false</span></div>
+                                        <div class="text-gray-500 text-xs mt-1">Mantıksal değerler</div>
+                                    </div>
+                                    <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                        <div class="text-blue-400">Array: <span class="text-yellow-300">[1, 2, 3]</span></div>
+                                        <div class="text-gray-500 text-xs mt-1">Sıralı liste</div>
+                                    </div>
+                                    <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                        <div class="text-blue-400">Object: <span class="text-yellow-300">{ name: &quot;Ali&quot; }</span></div>
+                                        <div class="text-gray-500 text-xs mt-1">Anahtar-değer çiftleri</div>
+                                    </div>
+                                    <div class="bg-gray-900 p-4 rounded-lg font-mono text-sm">
+                                        <div class="text-blue-400">null / undefined</div>
+                                        <div class="text-gray-500 text-xs mt-1">Boş veya tanımsız</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Fonksiyonlar',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Fonksiyon Tanımlama</h3>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm mb-6">
+                                    <div class="text-gray-400 mb-2">// Fonksiyon Bildirimi</div>
+                                    <div><span class="text-pink-400">function</span> <span class="text-yellow-400">selamVer</span>(<span class="text-blue-400">isim</span>) {</div>
+                                    <div class="ml-4 text-pink-400">return</div> <span class="text-yellow-300">&quot;Merhaba, &quot;</span> + isim;
+                                    <div>}</div>
+                                    <div class="mt-4 text-gray-400 mb-2">// Arrow Function (ES6)</div>
+                                    <div><span class="text-pink-400">const</span> <span class="text-yellow-400">topla</span> = (<span class="text-blue-400">a</span>, <span class="text-blue-400">b</span>) <span class="text-pink-400">=&gt;</span> a + b;</div>
+                                </div>
+                                <div class="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg">
+                                    <div class="font-bold mb-2">🎯 Pratik:</div>
+                                    <div class="text-sm text-gray-700 dark:text-gray-300">
+                                        <code>selamVer(&quot;Meriç&quot;)</code> çağrısı <code>&quot;Merhaba, Meriç&quot;</code> döndürür.
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Koşullar',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">If / Else</h3>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm mb-6">
+                                    <div><span class="text-pink-400">const</span> yas = <span class="text-green-400">18</span>;</div>
+                                    <div class="mt-2"><span class="text-pink-400">if</span> (yas &gt;= <span class="text-green-400">18</span>) {</div>
+                                    <div class="ml-4 text-blue-400">console</div>.<span class="text-yellow-400">log</span>(<span class="text-yellow-300">&quot;Reşit&quot;</span>);
+                                    <div>} <span class="text-pink-400">else</span> {</div>
+                                    <div class="ml-4 text-blue-400">console</div>.<span class="text-yellow-400">log</span>(<span class="text-yellow-300">&quot;Reşit değil&quot;</span>);
+                                    <div>}</div>
+                                    <div class="mt-4 text-gray-400">// Ternary Operator</div>
+                                    <div><span class="text-pink-400">const</span> durum = yas &gt;= <span class="text-green-400">18</span> ? <span class="text-yellow-300">&quot;Evet&quot;</span> : <span class="text-yellow-300">&quot;Hayır&quot;</span>;</div>
+                                </div>
+                                <div class="flex gap-4">
+                                    <div class="flex-1 p-4 bg-green-100 dark:bg-green-900/30 rounded-lg text-center">
+                                        <div class="text-2xl mb-2">✅</div>
+                                        <div class="font-bold text-green-700 dark:text-green-300">true</div>
+                                    </div>
+                                    <div class="flex-1 p-4 bg-red-100 dark:bg-red-900/30 rounded-lg text-center">
+                                        <div class="text-2xl mb-2">❌</div>
+                                        <div class="font-bold text-red-700 dark:text-red-300">false</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Döngüler',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Loop Types</h3>
+                                <div class="space-y-4">
+                                    <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm">
+                                        <div class="text-gray-400 mb-2">// For döngüsü</div>
+                                        <div><span class="text-pink-400">for</span> (<span class="text-pink-400">let</span> i = <span class="text-green-400">0</span>; i &lt; <span class="text-green-400">5</span>; i++) {</div>
+                                        <div class="ml-4 text-blue-400">console</div>.<span class="text-yellow-400">log</span>(i);
+                                        <div>}</div>
+                                    </div>
+                                    <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm">
+                                        <div class="text-gray-400 mb-2">// While döngüsü</div>
+                                        <div><span class="text-pink-400">while</span> (kosul) {</div>
+                                        <div class="ml-4 text-gray-500">// kod</div>
+                                        <div>}</div>
+                                    </div>
+                                    <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm">
+                                        <div class="text-gray-400 mb-2">// forEach (Array metodu)</div>
+                                        <div>array.<span class="text-yellow-400">forEach</span>(item <span class="text-pink-400">=&gt;</span> <span class="text-blue-400">console</span>.<span class="text-yellow-400">log</span>(item));</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'DOM Manipülasyonu',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Document Object Model</h3>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm mb-6">
+                                    <div class="text-gray-400 mb-2">// Element seçme</div>
+                                    <div><span class="text-pink-400">const</span> element = <span class="text-blue-400">document</span>.<span class="text-yellow-400">getElementById</span>(<span class="text-yellow-300">&quot;id&quot;</span>);</div>
+                                    <div><span class="text-pink-400">const</span> buttons = <span class="text-blue-400">document</span>.<span class="text-yellow-400">querySelectorAll</span>(<span class="text-yellow-300">&quot;.btn&quot;</span>);</div>
+                                    <div class="mt-4 text-gray-400 mb-2">// İçerik değiştirme</div>
+                                    <div>element.<span class="text-blue-400">textContent</span> = <span class="text-yellow-300">&quot;Yeni metin&quot;</span>;</div>
+                                    <div>element.<span class="text-blue-400">style</span>.<span class="text-blue-400">color</span> = <span class="text-yellow-300">&quot;red&quot;</span>;</div>
+                                </div>
+                                <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                                    <div class="font-bold mb-2 text-blue-700 dark:text-blue-300">💡 İpucu:</div>
+                                    <div class="text-sm">querySelector CSS seçicilerini kullanır: <code>#id</code>, <code>.class</code>, <code>tag</code></div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Event Listener',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Olay Dinleyiciler</h3>
+                                <div class="bg-gray-900 rounded-xl p-6 font-mono text-sm mb-6">
+                                    <div><span class="text-pink-400">const</span> button = <span class="text-blue-400">document</span>.<span class="text-yellow-400">querySelector</span>(<span class="text-yellow-300">&quot;#btn&quot;</span>);</div>
+                                    <div class="mt-2"></div>
+                                    <div>button.<span class="text-yellow-400">addEventListener</span>(<span class="text-yellow-300">&quot;click&quot;</span>, () <span class="text-pink-400">=&gt;</span> {</div>
+                                    <div class="ml-4 text-blue-400">console</div>.<span class="text-yellow-400">log</span>(<span class="text-yellow-300">&quot;Tıklandı!&quot;</span>);
+                                    <div>});</div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3 text-center text-sm">
+                                    <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded">click</div>
+                                    <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded">submit</div>
+                                    <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded">keydown</div>
+                                    <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded">mouseover</div>
+                                    <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded">load</div>
+                                    <div class="p-3 bg-gray-100 dark:bg-dark-900 rounded">scroll</div>
+                                </div>
+                                <div class="mt-6 text-center">
+                                    <button id="demoBtn" class="px-6 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors shadow-lg">
+                                        Bana Tıkla!
+                                    </button>
+                                </div>
+                                <script>
+                                    document.getElementById('demoBtn')?.addEventListener('click', function() {
+                                        this.textContent = 'Tıklandı! 🎉';
+                                        this.classList.add('bg-green-500');
+                                        setTimeout(() => {
+                                            this.textContent = 'Bana Tıkla!';
+                                            this.classList.remove('bg-green-500');
+                                        }, 1000);
+                                    });
+                                <\/script>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Modern JS (ES6+)',
+                        content: `
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Yeni Özellikler</h3>
+                                <div class="space-y-4">
+                                    <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm">
+                                        <div class="text-gray-400 mb-2">// Template Literals</div>
+                                        <div><span class="text-pink-400">const</span> mesaj = <span class="text-yellow-300">\`Merhaba \${isim}\`</span>;</div>
+                                    </div>
+                                    <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm">
+                                        <div class="text-gray-400 mb-2">// Destructuring</div>
+                                        <div><span class="text-pink-400">const</span> { name, age } = user;</div>
+                                        <div><span class="text-pink-400">const</span> [first, second] = array;</div>
+                                    </div>
+                                    <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm">
+                                        <div class="text-gray-400 mb-2">// Spread Operator</div>
+                                        <div><span class="text-pink-400">const</span> newArray = [...eskiArray, <span class="text-green-400">4</span>, <span class="text-green-400">5</span>];</div>
+                                    </div>
+                                    <div class="bg-gray-900 rounded-xl p-4 font-mono text-sm">
+                                        <div class="text-gray-400 mb-2">// Async/Await</div>
+                                        <div><span class="text-pink-400">async function</span> <span class="text-yellow-400">getData</span>() {</div>
+                                        <div class="ml-4"><span class="text-pink-400">const</span> data = <span class="text-pink-400">await</span> fetch(<span class="text-yellow-300">&quot;/api&quot;</span>);</div>
+                                        <div>}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Quiz Zamanı!',
+                        content: `
+                            <div class="p-8 text-center">
+                                <h3 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">JS Bilgini Test Et</h3>
+                                <div id="quizContainer" class="max-w-2xl mx-auto text-left">
+                                    <p class="mb-4 font-medium">const ve let arasındaki fark nedir?</p>
+                                    <div class="space-y-3">
+                                        <button onclick="checkAnswer(this, false)" class="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-yellow-500 transition-colors">
+                                            Hiçbir fark yoktur
+                                        </button>
+                                        <button onclick="checkAnswer(this, true)" class="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-yellow-500 transition-colors">
+                                            const değiştirilemez, let değiştirilebilir
+                                        </button>
+                                        <button onclick="checkAnswer(this, false)" class="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-yellow-500 transition-colors">
+                                            let sadece sayılar için kullanılır
+                                        </button>
+                                    </div>
+                                    <div id="quizResult" class="mt-4 hidden"></div>
+                                </div>
+                            </div>
+                        `
+                    },
+                    {
+                        title: 'Mükemmel!',
+                        content: `
+                            <div class="p-12 text-center">
+                                <div class="text-8xl mb-6 animate-bounce">🏆</div>
+                                <h2 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">Tüm Temelleri Tamamladın!</h2>
+                                <p class="text-xl text-gray-600 dark:text-gray-400 mb-8">Artık gerçek projeler geliştirmeye hazırsın.</p>
+                                <div class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white p-6 rounded-2xl max-w-md mx-auto mb-8">
+                                    <div class="text-lg font-bold mb-2">Sertifika</div>
+                                    <div class="text-sm opacity-90">CodeAcademy Pro - Temel Eğitim</div>
+                                    <div class="mt-4 pt-4 border-t border-white/30 text-xs">
+                                        Tamamlanma: ${new Date().toLocaleDateString('tr-TR')}
+                                    </div>
+                                </div>
+                                <button onclick="exitCourse()" class="px-8 py-3 bg-gray-200 dark:bg-dark-700 text-gray-800 dark:text-white rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-dark-600 transition-colors">
+                                    Ana Sayfaya Dön
+                                </button>
+                            </div>
+                        `
+                    }
+                ],
+                reading: `
+                    <h1 class="text-4xl font-bold mb-8 text-gray-900 dark:text-white">JavaScript Temel Kavramlar - Detaylı Anlatım</h1>
+                    
+                    <div class="prose dark:prose-invert max-w-none">
+                        <h2 class="text-2xl font-bold mt-8 mb-4">JavaScript&apos;e Giriş</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4 leading-relaxed">
+                            JavaScript, web sayfalarını etkileşimli hale getiren bir programlama dilidir. 
+                            1995&apos;te Brendan Eich tarafından 10 günde geliştirilmiştir ve günümüzde web&apos;in temel üç teknolojisinden biridir (HTML, CSS, JS).
+                        </p>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Değişkenler ve Sabitler</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            Modern JavaScript&apos;te (ES6+) üç ana değişken tanımlama yöntemi vardır:
+                        </p>
+                        
+                        <div class="bg-gray-900 rounded-xl p-6 my-6">
+                            <pre class="text-gray-300 font-mono text-sm"><code>const PI = 3.14;           // Sabit, yeniden atama yapılamaz
+let count = 0;             // Değişken, blok scope&apos;lu
+var oldVariable = "eski";  // Eski yöntem, fonksiyon scope&apos;lu</code></pre>
+                        </div>
+
+                        <div class="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-400 p-4 rounded my-4">
+                            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                                <strong>Best Practice:</strong> Varsayılan olarak <code>const</code> kullanın, 
+                                değişmesi gerekiyorsa <code>let</code> kullanın. <code>var</code> kullanmaktan kaçının.
+                            </p>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Veri Tipleri</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            JavaScript dinamik tipli bir dildir. 8 temel veri tipi vardır:
+                        </p>
+
+                        <div class="grid md:grid-cols-2 gap-4 my-6">
+                            <div class="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg">
+                                <h4 class="font-bold mb-2">Primitive Tipler</h4>
+                                <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400">
+                                    <li>string</li>
+                                    <li>number</li>
+                                    <li>bigint</li>
+                                    <li>boolean</li>
+                                    <li>undefined</li>
+                                    <li>null</li>
+                                    <li>symbol</li>
+                                </ul>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-dark-900 p-4 rounded-lg">
+                                <h4 class="font-bold mb-2">Referans Tipler</h4>
+                                <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-400">
+                                    <li>object</li>
+                                    <li>array (özel object)</li>
+                                    <li>function (özel object)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Fonksiyonlar</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            JavaScript&apos;te fonksiyonlar birinci sınıf vatandaşlardır (first-class citizens). 
+                            Yani değişkenlere atanabilir, parametre olarak geçilebilir ve return edilebilirler.
+                        </p>
+
+                        <div class="bg-gray-900 rounded-xl p-6 my-6">
+                            <pre class="text-gray-300 font-mono text-sm"><code>// Fonksiyon Deklarasyonu
+function greet(name) {
+    return \`Merhaba, \${name}!\`;
+}
+
+// Fonksiyon İfadesi
+const add = function(a, b) {
+    return a + b;
+};
+
+// Arrow Function (Ok Fonksiyonu)
+const multiply = (a, b) => a * b;
+
+// Callback örneği
+setTimeout(() => {
+    console.log("2 saniye sonra çalıştı");
+}, 2000);</code></pre>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">DOM Manipülasyonu</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            Document Object Model (DOM), HTML belgesinin programatik olarak erişilebilen bir temsilidir.
+                        </p>
+
+                        <div class="bg-gray-900 rounded-xl p-6 my-6">
+                            <pre class="text-gray-300 font-mono text-sm"><code>// Element seçme
+const header = document.getElementById('header');
+const items = document.getElementsByClassName('item');
+const buttons = document.querySelectorAll('button.primary');
+
+// Element oluşturma
+const newDiv = document.createElement('div');
+newDiv.className = 'container';
+newDiv.id = 'main';
+newDiv.setAttribute('data-id', '123');
+
+// Element ekleme
+parentElement.appendChild(newDiv);
+parentElement.insertBefore(newElement, referenceElement);
+
+// Event handling
+button.addEventListener('click', function(event) {
+    event.preventDefault();
+    console.log('Tıklandı!');
+});</code></pre>
+                        </div>
+
+                        <h2 class="text-2xl font-bold mt-8 mb-4">Asenkron JavaScript</h2>
+                        <p class="text-gray-600 dark:text-gray-400 mb-4">
+                            JavaScript single-threaded&apos;dir, ancak asenkron işlemler ile non-blocking çalışabilir.
+                        </p>
+
+                        <div class="bg-gray-900 rounded-xl p-6 my-6">
+                            <pre class="text-gray-300 font-mono text-sm"><code>// Promise
+const fetchData = () => {
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve("Veri geldi!");
+        }, 1000);
+    });
+};
+
+// Async/Await (Modern yaklaşım)
+async function getData() {
+    try {
+        const result = await fetchData();
+        console.log(result);
+    } catch (error) {
+        console.error("Hata:", error);
+    }
+}</code></pre>
+                        </div>
+
+                        <div class="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 rounded my-4">
+                            <p class="text-sm text-blue-800 dark:text-blue-200">
+                                <strong>İpucu:</strong> Modern JavaScript projelerinde Fetch API veya Axios kütüphanesi 
+                                ile HTTP istekleri yapılır. Callback hell&apos;den kaçınmak için async/await kullanın.
+                            </p>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // State
+        let currentCourse = null;
+        let currentMode = null;
+        let currentSlide = 0;
+        let userProgress = {
+            html: 0,
+            css: 0,
+            js: 0
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check system preference for dark mode
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.classList.add('dark');
+            }
+            
+            // Load saved progress
+            const saved = localStorage.getItem('courseProgress');
+            if (saved) {
+                userProgress = JSON.parse(saved);
+                updateGlobalProgress();
+            }
+        });
+
+        // Dark Mode Toggle
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        // Navigation
+        function scrollToCourses() {
+            document.getElementById('courses').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showHome() {
+            document.getElementById('homeView').classList.remove('hidden');
+            document.getElementById('slideView').classList.add('hidden');
+            document.getElementById('readingView').classList.add('hidden');
+            document.getElementById('globalProgress').classList.add('hidden');
+            currentCourse = null;
+            currentMode = null;
+        }
+
+        function startCourse(courseId, mode) {
+            currentCourse = courseId;
+            currentMode = mode;
+            currentSlide = 0;
+
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('globalProgress').classList.remove('hidden');
+
+            if (mode === 'slide') {
+                document.getElementById('slideView').classList.remove('hidden');
+                document.getElementById('readingView').classList.add('hidden');
+                renderSlide();
+            } else {
+                document.getElementById('readingView').classList.remove('hidden');
+                document.getElementById('slideView').classList.add('hidden');
+                document.getElementById('readingContent').innerHTML = courses[courseId].reading;
+            }
+
+            updateProgress();
+        }
+
+        function exitCourse() {
+            showHome();
+        }
+
+        // Slide Mode Functions
+        function renderSlide() {
+            const container = document.getElementById('slideContainer');
+            const slide = courses[currentCourse].slides[currentSlide];
+            
+            // Animation
+            container.innerHTML = `<div class="slide-enter h-full flex flex-col">${slide.content}</div>`;
+            
+            // Update counter and progress
+            document.getElementById('slideCounter').textContent = `${currentSlide + 1} / ${courses[currentCourse].slides.length}`;
+            const progress = ((currentSlide + 1) / courses[currentCourse].slides.length) * 100;
+            document.getElementById('slideProgress').style.width = `${progress}%`;
+            
+            // Save progress
+            userProgress[currentCourse] = Math.max(userProgress[currentCourse], currentSlide + 1);
+            localStorage.setItem('courseProgress', JSON.stringify(userProgress));
+            updateGlobalProgress();
+        }
+
+        function nextSlide() {
+            if (currentSlide < courses[currentCourse].slides.length - 1) {
+                currentSlide++;
+                renderSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                renderSlide();
+            }
+        }
+
+        // Reading Mode Functions
+        function nextReading() {
+            // In reading mode, just scroll to top or show next section
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast('Sonraki bölüm yüklendi');
+        }
+
+        function prevReading() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Quiz Function
+        function checkAnswer(btn, isCorrect) {
+            const resultDiv = document.getElementById('quizResult');
+            const buttons = btn.parentElement.querySelectorAll('button');
+            
+            buttons.forEach(b => {
+                b.disabled = true;
+                b.classList.add('opacity-50');
+            });
+            
+            btn.classList.remove('opacity-50');
+            
+            if (isCorrect) {
+                btn.classList.add('border-green-500', 'bg-green-50', 'dark:bg-green-900/20');
+                resultDiv.innerHTML = '<div class="p-4 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg flex items-center gap-2"><span class="text-2xl">✅</span> <span>Doğru! Harika iş.</span></div>';
+            } else {
+                btn.classList.add('border-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+                resultDiv.innerHTML = '<div class="p-4 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg flex items-center gap-2"><span class="text-2xl">❌</span> <span>Yanlış. Tekrar dene!</span></div>';
+            }
+            
+            resultDiv.classList.remove('hidden');
+        }
+
+        // Utility Functions
+        function copyCode(btn) {
+            const code = btn.nextElementSibling.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Kod kopyalandı!');
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function updateProgress() {
+            const totalSlides = courses[currentCourse].slides.length;
+            const completed = userProgress[currentCourse];
+            const percent = Math.round((completed / totalSlides) * 100);
+            
+            document.getElementById('progressPercent').textContent = `${percent}%`;
+            document.getElementById('progressCircle').setAttribute('stroke-dasharray', `${percent}, 100`);
+        }
+
+        function updateGlobalProgress() {
+            let totalCompleted = 0;
+            let totalSlides = 0;
+            
+            Object.keys(courses).forEach(key => {
+                totalCompleted += userProgress[key] || 0;
+                totalSlides += courses[key].slides.length;
+            });
+            
+            const percent = Math.round((totalCompleted / totalSlides) * 100);
+            document.getElementById('progressPercent').textContent = `${percent}%`;
+            document.getElementById('progressCircle').setAttribute('stroke-dasharray', `${percent}, 100`);
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (currentMode === 'slide' && currentCourse) {
+                if (e.key === 'ArrowRight') nextSlide();
+                if (e.key === 'ArrowLeft') prevSlide();
+            }
+        });
+    </script>
+</body>
+</html>
